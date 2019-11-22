@@ -89,6 +89,5 @@ RUN set -ex; \
 	chown -R www-data:www-data /usr/src/wordpress
 COPY php.ini /usr/local/etc/php/
 COPY docker-entrypoint.sh /usr/local/bin/
-
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]
