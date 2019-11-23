@@ -288,5 +288,5 @@ EOPHP
 fi
 chown www-data:www-data -R /var/www/
 chmod 755 -R /var/www/
-echo -e "$(hostname -i) $(hostname)\n$(hostname -i) $(hostname).localhost" >> /etc/hosts
+echo -e "$(hostname -i) $(hostname).localhost" >> /etc/hosts
 exec "$@"
