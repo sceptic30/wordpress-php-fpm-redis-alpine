@@ -1,4 +1,4 @@
-FROM php:7.3-fpm-alpine
+FROM php:7.4.1-fpm-alpine
 
 # persistent dependencies
 RUN apk add --no-cache \
@@ -16,17 +16,12 @@ RUN set -ex; \
 		$PHPIZE_DEPS \
 		freetype-dev \
 		imagemagick-dev \
-		hiredis-dev \
 		libjpeg-turbo-dev \
 		libpng-dev \
 		libzip-dev \
 	; \
 	\
-	docker-php-ext-configure gd \
-		--with-freetype-dir=/usr \
-		--with-jpeg-dir=/usr \
-		--with-png-dir=/usr \
-	; \
+	docker-php-ext-configure gd --with-freetype --with-jpeg; \
 	docker-php-ext-install -j "$(nproc)" \
 		bcmath \
 		exif \
@@ -36,9 +31,7 @@ RUN set -ex; \
 		zip \
 	; \
 	pecl install imagick-3.4.4; \
-	pecl install redis-5.1.1; \
 	docker-php-ext-enable imagick; \
-	docker-php-ext-enable redis; \
 	\
 	runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/lib/php/extensions \
@@ -75,8 +68,8 @@ RUN { \
 
 VOLUME /var/www/html
 
-ENV WORDPRESS_VERSION 5.3
-ENV WORDPRESS_SHA1 e3edcb1131e539c2b2e10fed37f8b6683c824a98
+ENV WORDPRESS_VERSION 5.3.2
+ENV WORDPRESS_SHA1 fded476f112dbab14e3b5acddd2bcfa550e7b01b
 
 RUN set -ex; \
 	curl -o wordpress.tar.gz -fSL "https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"; \
@@ -87,7 +80,8 @@ RUN set -ex; \
 	rm /usr/src/php.tar.xz; \
 	rm /usr/src/php.tar.xz.asc; \
 	chown -R www-data:www-data /usr/src/wordpress
-COPY php.ini /usr/local/etc/php/
+
 COPY docker-entrypoint.sh /usr/local/bin/
+COPY php.ini /usr/local/etc/php/
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]
