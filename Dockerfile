@@ -1,5 +1,6 @@
 FROM php:7.4.1-fpm-alpine
 
+LABEL maintainer="nikolas@admintuts.tech"
 # persistent dependencies
 RUN apk add --no-cache \
 # in theory, docker-entrypoint.sh is POSIX-compliant, but priority is a working, consistent image
