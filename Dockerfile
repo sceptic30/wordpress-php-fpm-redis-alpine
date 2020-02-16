@@ -1,6 +1,5 @@
-FROM php:7.4.1-fpm-alpine
+FROM php:7.4.2-fpm-alpine
 
-LABEL maintainer="nikolas@admintuts.tech"
 # persistent dependencies
 RUN apk add --no-cache \
 # in theory, docker-entrypoint.sh is POSIX-compliant, but priority is a working, consistent image
@@ -17,6 +16,7 @@ RUN set -ex; \
 		$PHPIZE_DEPS \
 		freetype-dev \
 		imagemagick-dev \
+		hiredis-dev \
 		libjpeg-turbo-dev \
 		libpng-dev \
 		libzip-dev \
@@ -32,7 +32,9 @@ RUN set -ex; \
 		zip \
 	; \
 	pecl install imagick-3.4.4; \
+	pecl install redis-5.1.1; \
 	docker-php-ext-enable imagick; \
+	docker-php-ext-enable redis; \
 	\
 	runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/lib/php/extensions \
@@ -82,7 +84,8 @@ RUN set -ex; \
 	rm /usr/src/php.tar.xz.asc; \
 	chown -R www-data:www-data /usr/src/wordpress
 
-COPY docker-entrypoint.sh /usr/local/bin/
 COPY php.ini /usr/local/etc/php/
+COPY docker-entrypoint.sh /usr/local/bin/
+
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]
