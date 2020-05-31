@@ -1,4 +1,4 @@
-FROM php:7.4.5-fpm-alpine
+FROM php:7.4.6-fpm-alpine
 
 # persistent dependencies
 RUN apk add --no-cache \
@@ -71,7 +71,7 @@ RUN { \
 
 VOLUME /var/www/html
 
-ENV WORDPRESS_VERSION 5.4
+ENV WORDPRESS_VERSION 5.4.1
 ENV WORDPRESS_SHA1 d5f1e6d7cadd72c11d086a2e1ede0a72f23d993e
 
 RUN set -ex; \
