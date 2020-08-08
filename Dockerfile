@@ -34,7 +34,7 @@ RUN set -ex; \
 		zip \
 	; \
 	pecl install imagick-3.4.4; \
-	pecl install redis-5.2.2; \
+	pecl install redis-5.3.1; \
 	docker-php-ext-enable imagick; \
 	docker-php-ext-enable redis; \
 	\
