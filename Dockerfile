@@ -1,4 +1,4 @@
-FROM php:7.4.9-fpm-alpine
+FROM php:7.4.12-fpm-alpine
 
 # persistent dependencies
 RUN apk add --no-cache \
@@ -34,7 +34,7 @@ RUN set -ex; \
 		zip \
 	; \
 	pecl install imagick-3.4.4; \
-	pecl install redis-5.3.1; \
+	pecl install redis-5.3.2; \
 	docker-php-ext-enable imagick; \
 	docker-php-ext-enable redis; \
 	\
