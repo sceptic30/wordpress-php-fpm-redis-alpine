@@ -1,4 +1,4 @@
-FROM php:7.4.12-fpm-alpine
+FROM php:7.4.14-fpm-alpine
 
 # persistent dependencies
 RUN apk add --no-cache \
@@ -21,16 +21,17 @@ RUN set -ex; \
 		libjpeg-turbo-dev \
 		libpng-dev \
 		libzip-dev \
-		hiredis-dev \
 	; \
 	\
-	docker-php-ext-configure gd --with-freetype --with-jpeg; \
+	docker-php-ext-configure gd \
+		--with-freetype \
+		--with-jpeg \
+	; \
 	docker-php-ext-install -j "$(nproc)" \
 		bcmath \
 		exif \
 		gd \
 		mysqli \
-		opcache \
 		zip \
 	; \
 	pecl install imagick-3.4.4; \
@@ -44,12 +45,14 @@ RUN set -ex; \
 			| sort -u \
 			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
 	)"; \
-	apk add --virtual .wordpress-phpexts-rundeps $runDeps; \
-	apk del .build-deps
+	apk add --no-network --virtual .wordpress-phpexts-rundeps $runDeps; \
+	apk del --no-network .build-deps
 
 # set recommended PHP.ini settings
 # see https://secure.php.net/manual/en/opcache.installation.php
-RUN { \
+RUN set -eux; \
+	docker-php-ext-enable opcache; \
+	{ \
 		echo 'opcache.memory_consumption=128'; \
 		echo 'opcache.interned_strings_buffer=8'; \
 		echo 'opcache.max_accelerated_files=4000'; \
@@ -71,20 +74,38 @@ RUN { \
 		echo 'html_errors = Off'; \
 	} > /usr/local/etc/php/conf.d/error-logging.ini
 
-VOLUME /var/www/html
-
-ENV WORDPRESS_VERSION 5.5.1
-ENV WORDPRESS_SHA1 d3316a4ffff2a12cf92fde8bfdd1ff8691e41931
-
-RUN set -ex; \
-	curl -o wordpress.tar.gz -fSL "https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"; \
-	echo "$WORDPRESS_SHA1 *wordpress.tar.gz" | sha1sum -c -; \
+RUN set -eux; \
+	version='5.6'; \
+	sha1='db8b75bfc9de27490434b365c12fd805ca6784ce'; \
+	\
+	curl -o wordpress.tar.gz -fL "https://wordpress.org/wordpress-$version.tar.gz"; \
+	echo "$sha1 *wordpress.tar.gz" | sha1sum -c -; \
+	\
 # upstream tarballs include ./wordpress/ so this gives us /usr/src/wordpress
 	tar -xzf wordpress.tar.gz -C /usr/src/; \
 	rm wordpress.tar.gz; \
 	rm /usr/src/php.tar.xz; \
 	rm /usr/src/php.tar.xz.asc; \
-	chown -R www-data:www-data /usr/src/wordpress
+	\
+# https://wordpress.org/support/article/htaccess/
+	[ ! -e /usr/src/wordpress/.htaccess ]; \
+	{ \
+		echo '# BEGIN WordPress'; \
+		echo ''; \
+		echo 'RewriteEngine On'; \
+		echo 'RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]'; \
+		echo 'RewriteBase /'; \
+		echo 'RewriteRule ^index\.php$ - [L]'; \
+		echo 'RewriteCond %{REQUEST_FILENAME} !-f'; \
+		echo 'RewriteCond %{REQUEST_FILENAME} !-d'; \
+		echo 'RewriteRule . /index.php [L]'; \
+		echo ''; \
+		echo '# END WordPress'; \
+	} > /usr/src/wordpress/.htaccess; \
+	\
+	chown -R www-data:www-data /usr/src/wordpress;
+
+VOLUME /var/www/html
 
 COPY php.ini /usr/local/etc/php/
 COPY docker-entrypoint.sh /usr/local/bin/
