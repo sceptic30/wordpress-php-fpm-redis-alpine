@@ -1,23 +1,22 @@
-FROM php:7.4.14-fpm-alpine
+FROM php:8.0-fpm-alpine
 
 # persistent dependencies
-RUN apk add --no-cache \
+USER root
+RUN set -eux; \
+	apk add --no-cache \
 # in theory, docker-entrypoint.sh is POSIX-compliant, but priority is a working, consistent image
 		bash \
 # BusyBox sed is not sufficient for some of our sed expressions
 		sed \
 # Ghostscript is required for rendering PDF previews
 		ghostscript \
-# Alpine package for "imagemagick" contains ~120 .so files, see: https://github.com/docker-library/wordpress/pull/497
-		imagemagick
-
+	;
 # install the PHP extensions we need (https://make.wordpress.org/hosting/handbook/handbook/server-environment/#php-extensions)
 RUN set -ex; \
 	\
 	apk add --no-cache --virtual .build-deps \
 		$PHPIZE_DEPS \
 		freetype-dev \
-		imagemagick-dev \
 		libjpeg-turbo-dev \
 		libpng-dev \
 		libzip-dev \
@@ -34,9 +33,7 @@ RUN set -ex; \
 		mysqli \
 		zip \
 	; \
-	pecl install imagick-3.4.4; \
 	pecl install redis-5.3.2; \
-	docker-php-ext-enable imagick; \
 	docker-php-ext-enable redis; \
 	\
 	runDeps="$( \
@@ -75,8 +72,8 @@ RUN { \
 	} > /usr/local/etc/php/conf.d/error-logging.ini
 
 RUN set -eux; \
-	version='5.6'; \
-	sha1='db8b75bfc9de27490434b365c12fd805ca6784ce'; \
+	version='5.6.1'; \
+	sha1='19ec00acb177da27533edf5500f911f9d97c047a'; \
 	\
 	curl -o wordpress.tar.gz -fL "https://wordpress.org/wordpress-$version.tar.gz"; \
 	echo "$sha1 *wordpress.tar.gz" | sha1sum -c -; \
@@ -103,12 +100,15 @@ RUN set -eux; \
 		echo '# END WordPress'; \
 	} > /usr/src/wordpress/.htaccess; \
 	\
-	chown -R www-data:www-data /usr/src/wordpress;
+	chown -R www-data:www-data /usr/src/wordpress; \
+	chmod 755 -R /usr/src/wordpress;
 
 VOLUME /var/www/html
 
-COPY php.ini /usr/local/etc/php/
 COPY docker-entrypoint.sh /usr/local/bin/
+COPY php.ini /usr/local/etc/php/
+
+USER www-data
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]
