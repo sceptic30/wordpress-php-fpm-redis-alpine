@@ -1,4 +1,4 @@
-FROM php:8.0.3-fpm-alpine
+FROM admintuts/php:8.0.5-fpm-alpine
 
 # persistent dependencies
 USER root
@@ -72,8 +72,8 @@ RUN { \
 	} > /usr/local/etc/php/conf.d/error-logging.ini
 
 RUN set -eux; \
-	version='5.7'; \
-	sha1='76d1332cfcbc5f8b17151b357999d1f758faf897'; \
+	version='5.7.1'; \
+	sha1='296bc228c4f4d67d7da8814079f86516f6c2337d'; \
 	\
 	curl -o wordpress.tar.gz -fL "https://wordpress.org/wordpress-$version.tar.gz"; \
 	echo "$sha1 *wordpress.tar.gz" | sha1sum -c -; \
@@ -99,16 +99,12 @@ RUN set -eux; \
 		echo ''; \
 		echo '# END WordPress'; \
 	} > /usr/src/wordpress/.htaccess; \
-	\
 	chown -R www-data:www-data /usr/src/wordpress; \
 	chmod 755 -R /usr/src/wordpress;
 
 VOLUME /var/www/html
-
 COPY docker-entrypoint.sh /usr/local/bin/
 COPY php.ini /usr/local/etc/php/
-
 USER www-data
-
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]
