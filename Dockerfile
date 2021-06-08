@@ -1,4 +1,4 @@
-FROM admintuts/php:8.0.6-fpm-alpine
+FROM admintuts/php:8.0.7-fpm-alpine
 
 # persistent dependencies
 USER root
@@ -10,6 +10,7 @@ RUN set -eux; \
 		sed \
 # Ghostscript is required for rendering PDF previews
 		ghostscript \
+		#imagemagick \
 	;
 # install the PHP extensions we need (https://make.wordpress.org/hosting/handbook/handbook/server-environment/#php-extensions)
 RUN set -ex; \
@@ -20,6 +21,7 @@ RUN set -ex; \
 		libjpeg-turbo-dev \
 		libpng-dev \
 		libzip-dev \
+		#imagemagick-dev \
 	; \
 	\
 	docker-php-ext-configure gd \
@@ -33,8 +35,10 @@ RUN set -ex; \
 		mysqli \
 		zip \
 	; \
-	pecl install redis-5.3.2; \
+	pecl install redis-5.3.4; \
 	docker-php-ext-enable redis; \
+	#pecl install imagick-3.4.4; \
+	#docker-php-ext-enable imagick; \
 	\
 	runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/lib/php/extensions \
