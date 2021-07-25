@@ -1,4 +1,4 @@
-FROM admintuts/php:8.0.7-fpm-alpine
+FROM admintuts/php:8.0.8-fpm-alpine
 
 # persistent dependencies
 USER root
@@ -6,11 +6,10 @@ RUN set -eux; \
 	apk add --no-cache \
 # in theory, docker-entrypoint.sh is POSIX-compliant, but priority is a working, consistent image
 		bash \
-# BusyBox sed is not sufficient for some of our sed expressions
-		sed \
 # Ghostscript is required for rendering PDF previews
 		ghostscript \
-		#imagemagick \
+# Alpine package for "imagemagick" contains ~120 .so files, see: https://github.com/docker-library/wordpress/pull/497
+		imagemagick \
 	;
 # install the PHP extensions we need (https://make.wordpress.org/hosting/handbook/handbook/server-environment/#php-extensions)
 RUN set -ex; \
@@ -18,10 +17,10 @@ RUN set -ex; \
 	apk add --no-cache --virtual .build-deps \
 		$PHPIZE_DEPS \
 		freetype-dev \
+		imagemagick-dev \
 		libjpeg-turbo-dev \
 		libpng-dev \
 		libzip-dev \
-		#imagemagick-dev \
 	; \
 	\
 	docker-php-ext-configure gd \
@@ -37,8 +36,9 @@ RUN set -ex; \
 	; \
 	pecl install redis-5.3.4; \
 	docker-php-ext-enable redis; \
-	#pecl install imagick-3.4.4; \
-	#docker-php-ext-enable imagick; \
+	pecl install imagick-3.5.0; \
+	docker-php-ext-enable imagick; \
+	rm -r /tmp/pear; \
 	\
 	runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/lib/php/extensions \
@@ -76,8 +76,8 @@ RUN { \
 	} > /usr/local/etc/php/conf.d/error-logging.ini
 
 RUN set -eux; \
-	version='5.7.2'; \
-	sha1='c97c037d942e974eb8524213a505268033aff6c8'; \
+	version='5.8'; \
+	sha1='6476e69305ba557694424b04b9dea7352d988110'; \
 	\
 	curl -o wordpress.tar.gz -fL "https://wordpress.org/wordpress-$version.tar.gz"; \
 	echo "$sha1 *wordpress.tar.gz" | sha1sum -c -; \
