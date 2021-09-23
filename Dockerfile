@@ -36,7 +36,7 @@ RUN set -ex; \
 	; \
 	pecl install redis-5.3.4; \
 	docker-php-ext-enable redis; \
-	pecl install imagick-3.5.0; \
+	pecl install imagick-3.5.1; \
 	docker-php-ext-enable imagick; \
 	rm -r /tmp/pear; \
 	\
