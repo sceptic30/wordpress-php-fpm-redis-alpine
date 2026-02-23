@@ -1,4 +1,4 @@
-FROM admintuts/php:8.0.12-fpm-alpine
+FROM admintuts/php:8.5.3-fpm-alpine
 
 # persistent dependencies
 USER root
@@ -34,9 +34,9 @@ RUN set -ex; \
 		mysqli \
 		zip \
 	; \
-	pecl install redis-5.3.4; \
+	pecl install redis-6.3.0; \
 	docker-php-ext-enable redis; \
-	pecl install imagick-3.5.1; \
+	pecl install imagick-3.8.1; \
 	docker-php-ext-enable imagick; \
 	rm -r /tmp/pear; \
 	\
@@ -52,7 +52,6 @@ RUN set -ex; \
 # set recommended PHP.ini settings
 # see https://secure.php.net/manual/en/opcache.installation.php
 RUN set -eux; \
-	docker-php-ext-enable opcache; \
 	{ \
 		echo 'opcache.memory_consumption=128'; \
 		echo 'opcache.interned_strings_buffer=8'; \
@@ -76,8 +75,8 @@ RUN { \
 	} > /usr/local/etc/php/conf.d/error-logging.ini
 
 RUN set -eux; \
-	version='5.8.1'; \
-	sha1='21e50add5a51cd9a18610244c942c08f7abeccd8'; \
+	version='6.9.1'; \
+	sha1='2914d37c00597e6216a88f90e22b1b4c7bbd09e8'; \
 	\
 	curl -o wordpress.tar.gz -fL "https://wordpress.org/wordpress-$version.tar.gz"; \
 	echo "$sha1 *wordpress.tar.gz" | sha1sum -c -; \
